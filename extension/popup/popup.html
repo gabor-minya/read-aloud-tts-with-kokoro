@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Read Aloud TTS with Kokoro</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header>
+      <h1>Read Aloud TTS</h1>
+      <span class="subtitle">Kokoro · Text to Speech</span>
+    </header>
+
+    <div id="status-indicator" class="status offline">
+      <span class="status-dot"></span>
+      <span id="status-text">Connecting...</span>
+    </div>
+
+    <div class="controls">
+      <div class="host-control">
+        <label for="host-input">Kokoro API URL</label>
+        <input type="text" id="host-input" class="form-input" placeholder="http://localhost:8880" autocomplete="off" spellcheck="false">
+      </div>
+
+      <select id="voice-select" class="form-select">
+        <option value="">Loading voices...</option>
+      </select>
+
+      <div class="speed-control">
+        <label for="speed-slider">Speed: <span id="speed-display">1.0x</span></label>
+        <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btn-start" class="btn primary">▶ Read page</button>
+      <button id="btn-stop" class="btn danger" disabled>■ Stop</button>
+    </div>
+
+    <div id="info" class="info" style="display:none;">
+      <span id="info-progress">-- / --</span>
+      <span id="info-status">Ready</span>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

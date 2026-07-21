@@ -1,0 +1,6 @@
+.idea/
+.reasonix/
+*.zip
+store-assets/
+.docs/
+AGENTS.md

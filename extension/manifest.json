@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Read Aloud TTS with Kokoro",
+  "version": "1.0.0",
+  "description": "Reads web pages aloud with a local Kokoro TTS server. Sentence navigation, highlighting, voice selection, and speed control.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["activeTab", "storage"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Read Aloud TTS with Kokoro",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["lib/readability.js", "content/content.js"],
+    "css": ["content/content.css"]
+  }]
+}

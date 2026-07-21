@@ -18,7 +18,7 @@
   let currentIndex = -1;
   let isPlaying = false;
   let isPaused = false;
-  let settings = { voice: 'af_heart', speed: 1.0, host: 'http://localhost:8880' };
+  let settings = { voice: 'af_heart', speed: 1.0, volume: 1.0, host: 'http://localhost:8880' };
   let audioEl = null;
   let controlBarEl = null;
   let selectionButtonEl = null;
@@ -395,6 +395,7 @@
     const url = URL.createObjectURL(blob);
     audioEl = new Audio(url);
     audioEl.playbackRate = settings.speed;
+    audioEl.volume = settings.volume;
     audioEl._sentenceIndex = index;
 
     audioEl.addEventListener('ended', onAudioEnded);
@@ -585,6 +586,9 @@
           <input type="range" id="ra-speed-slider" min="0.5" max="2.0" step="0.1" value="${settings.speed}">
           <span id="ra-speed-value">${settings.speed}x</span>
         </label>
+        <label class="ra-volume-label">Vol:
+          <input type="range" id="ra-volume-slider" min="0" max="100" step="5" value="${Math.round(settings.volume * 100)}">
+        </label>
       </div>
     `;
     document.body.appendChild(controlBarEl);
@@ -608,6 +612,13 @@
         audioEl.playbackRate = settings.speed;
       }
       chrome.storage.local.set({ speed: settings.speed });
+    });
+    document.getElementById('ra-volume-slider').addEventListener('input', (e) => {
+      settings.volume = parseInt(e.target.value, 10) / 100;
+      if (audioEl) {
+        audioEl.volume = settings.volume;
+      }
+      chrome.storage.local.set({ volume: settings.volume });
     });
     document.getElementById('ra-voice-select').addEventListener('change', (e) => {
       settings.voice = e.target.value;
@@ -953,6 +964,14 @@
         break;
       }
 
+      case 'setVolume': {
+        settings.volume = msg.volume;
+        if (audioEl) audioEl.volume = msg.volume;
+        chrome.storage.local.set({ volume: msg.volume });
+        sendResponse({ ok: true });
+        break;
+      }
+
       case 'setHost': {
         settings.host = msg.host.replace(/\/+$/, '');
         chrome.storage.local.set({ kokoroHost: settings.host });
@@ -968,6 +987,7 @@
           totalSentences,
           voice: settings.voice,
           speed: settings.speed,
+          volume: settings.volume,
           hasControlBar: !!controlBarEl,
           hasSentences: sentences.length > 0,
         });
@@ -984,9 +1004,26 @@
     }
   });
 
-  chrome.storage.local.get(['voice', 'speed', 'kokoroHost'], (data) => {
+  chrome.storage.local.get(['voice', 'speed', 'volume', 'kokoroHost'], (data) => {
     if (data.voice) settings.voice = data.voice;
     if (data.speed) settings.speed = data.speed;
+    if (data.volume != null) settings.volume = data.volume;
     if (data.kokoroHost) settings.host = data.kokoroHost.replace(/\/+$/, '');
+  });
+
+  // Real-time sync: update control-bar sliders when popup changes speed/volume
+  chrome.storage.onChanged.addListener((changes) => {
+    const speedSlider = document.getElementById('ra-speed-slider');
+    const speedValue = document.getElementById('ra-speed-value');
+    const volumeSlider = document.getElementById('ra-volume-slider');
+    if (changes.speed && speedSlider) {
+      speedSlider.value = changes.speed.newValue;
+      if (speedValue) speedValue.textContent = changes.speed.newValue + 'x';
+      settings.speed = changes.speed.newValue;
+    }
+    if (changes.volume != null && volumeSlider) {
+      volumeSlider.value = Math.round(changes.volume.newValue * 100);
+      settings.volume = changes.volume.newValue;
+    }
   });
 })();

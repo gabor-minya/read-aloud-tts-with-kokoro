@@ -113,6 +113,19 @@
   text-align: left;
 }
 
+.ra-volume-label {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #aaa;
+}
+
+#ra-volume-slider {
+  width: 60px;
+  accent-color: #1a73e8;
+}
+
 /* === Selection read-aloud button === */
 
 #ra-selection-btn {

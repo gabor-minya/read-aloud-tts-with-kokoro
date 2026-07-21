@@ -8,6 +8,7 @@
   let isPaused = false;
   let voice = 'af_heart';
   let speed = 1.0;
+  let volume = 1.0;
   let kokoroBase = DEFAULT_HOST;
 
   const els = {
@@ -17,6 +18,8 @@
     voiceSelect: document.getElementById('voice-select'),
     speedSlider: document.getElementById('speed-slider'),
     speedDisplay: document.getElementById('speed-display'),
+    volumeSlider: document.getElementById('volume-slider'),
+    volumeDisplay: document.getElementById('volume-display'),
     btnStart: document.getElementById('btn-start'),
     btnStop: document.getElementById('btn-stop'),
     info: document.getElementById('info'),
@@ -133,6 +136,11 @@
         els.speedSlider.value = speed;
         els.speedDisplay.textContent = speed + 'x';
       }
+      if (state.volume != null) {
+        volume = state.volume;
+        els.volumeSlider.value = Math.round(volume * 100);
+        els.volumeDisplay.textContent = Math.round(volume * 100) + '%';
+      }
     }
     updateUI();
   }
@@ -148,12 +156,17 @@
       return;
     }
 
-    const stored = await chrome.storage.local.get(['voice', 'speed', 'kokoroHost']);
+    const stored = await chrome.storage.local.get(['voice', 'speed', 'volume', 'kokoroHost']);
     if (stored.voice) voice = stored.voice;
     if (stored.speed) {
       speed = stored.speed;
       els.speedSlider.value = speed;
       els.speedDisplay.textContent = speed + 'x';
+    }
+    if (stored.volume != null) {
+      volume = stored.volume;
+      els.volumeSlider.value = Math.round(volume * 100);
+      els.volumeDisplay.textContent = Math.round(volume * 100) + '%';
     }
     if (stored.kokoroHost) {
       kokoroBase = normalizeHost(stored.kokoroHost);
@@ -218,6 +231,18 @@
     await sendToTab('setSpeed', { speed });
   });
 
+  els.volumeSlider.addEventListener('input', async () => {
+    volume = parseInt(els.volumeSlider.value, 10) / 100;
+    els.volumeDisplay.textContent = Math.round(volume * 100) + '%';
+  });
+
+  els.volumeSlider.addEventListener('change', async () => {
+    volume = parseInt(els.volumeSlider.value, 10) / 100;
+    els.volumeDisplay.textContent = Math.round(volume * 100) + '%';
+    await chrome.storage.local.set({ volume });
+    await sendToTab('setVolume', { volume });
+  });
+
   els.btnStart.addEventListener('click', async () => {
     if (!currentTabId) return;
 
@@ -258,4 +283,17 @@
   });
 
   init();
+
+  // Real-time sync: update sliders when another panel changes speed/volume
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.speed && els.speedSlider) {
+      els.speedSlider.value = changes.speed.newValue;
+      els.speedDisplay.textContent = changes.speed.newValue + 'x';
+    }
+    if (changes.volume && els.volumeSlider) {
+      const v = Math.round(changes.volume.newValue * 100);
+      els.volumeSlider.value = v;
+      els.volumeDisplay.textContent = v + '%';
+    }
+  });
 })();
